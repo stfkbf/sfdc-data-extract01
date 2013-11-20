@@ -59,10 +59,10 @@ public class SalesforceObject {
 				for (SalesforceObjectType childObjectType : this.objectType.getChildren()){
 					for (SalesforceFieldType field : childObjectType.getFields()){
 						if (field.isReference() && field.getReferenceObject().getName().equals(this.objectType.getName())){
-							// retrieve all objects and add
+							//TODO: Add configurable where clause
 							String childQuery = "SELECT Id FROM " + childObjectType.getName() + " WHERE " + field.getName() + " = '" + this.id + "'";
 						
-							QueryResult childQr = connection.query(childQuery);
+							QueryResult childQr = this.connection.query(childQuery);
 							
 							boolean done = false;
 

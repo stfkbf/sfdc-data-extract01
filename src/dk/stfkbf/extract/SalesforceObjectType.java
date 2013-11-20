@@ -13,6 +13,7 @@ import com.sforce.ws.ConnectionException;
 public class SalesforceObjectType {
 
 	public static HashMap<String, SalesforceObjectType> objectsByName = new HashMap<String, SalesforceObjectType>();
+	//TODO: Move into properties
 	public static String REFERENCE_DATA = "BusinessArea__c|ControlledFunctionType__c|CustomerType__c|InvestmentType__c|PermissionType__c|PermissionFunctionAssociation__c";
 	public static String SYSTEM_FIELDS = "OwnerId|CreatedById|CreatedDate|LastModifiedById|LastModifiedDate|SystemModstamp|LastViewedDate|LastReferencedDate|IsDeleted";
 	
