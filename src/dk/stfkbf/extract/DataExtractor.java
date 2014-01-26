@@ -76,7 +76,6 @@ public class DataExtractor {
 							objects[j].setTargetId(result[0].getId());
 							objects[j].setProcessed(true);
 						} else {
-							System.out.println(objects[j].getSObject().toString());
 							System.out.println("ERROR: Failed to write " + objects[j].getObjectType().getName() + " with Id: " + objects[j].getId());
 							System.out.println(result[0].toString());
 						}
