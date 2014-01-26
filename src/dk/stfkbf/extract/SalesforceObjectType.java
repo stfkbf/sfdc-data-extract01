@@ -13,9 +13,16 @@ import com.sforce.ws.ConnectionException;
 public class SalesforceObjectType {
 
 	public static HashMap<String, SalesforceObjectType> objectsByName = new HashMap<String, SalesforceObjectType>();
+	public static HashMap<String, String> objectSystemFields = new HashMap<String, String>();
 	//TODO: Move into properties
 	public static String REFERENCE_DATA = "BusinessArea__c|ControlledFunctionType__c|CustomerType__c|InvestmentType__c|PermissionType__c|PermissionFunctionAssociation__c";
-	public static String SYSTEM_FIELDS = "OwnerId|CreatedById|CreatedDate|LastModifiedById|LastModifiedDate|SystemModstamp|LastViewedDate|LastReferencedDate|IsDeleted";
+	public static String SYSTEM_FIELDS = "IsEmailBounced|OwnerId|CreatedById|CreatedDate|LastModifiedById|LastModifiedDate|SystemModstamp|LastViewedDate|LastReferencedDate|IsDeleted";
+	
+	static {
+		objectSystemFields.put("Contact","Name");
+		objectSystemFields.put("Case","IsClosed|CaseNumber");
+		objectSystemFields.put("Task","AccountId|IsArchived|IsClosed");
+	}
 	
 	private PartnerConnection connection;
 
@@ -48,19 +55,24 @@ public class SalesforceObjectType {
 
 			for (int i = 0; i < dsr.getFields().length; i++) {
 				Field field = dsr.getFields()[i];
-				
-				if (field.getType().equals(FieldType.reference) && field.getReferenceTo().length == 1) {
-					if (field.getReferenceTo()[0].matches(".*__c|Account|Case|Contact")) {
-						if (!objectsByName.containsKey(field.getReferenceTo()[0])) {
-							objectsByName.put(field.getReferenceTo()[0], new SalesforceObjectType(connection, field.getReferenceTo()[0]));
-						}							
-							
-						this.fields.add(new SalesforceFieldType(field.getName(), objectsByName.get(field.getReferenceTo()[0])));
-						this.isRoot = false;
+				//field.getType();
+				if (!field.getName().matches(SYSTEM_FIELDS) && !(objectSystemFields.containsKey(dsr.getName()) && field.getName().matches(objectSystemFields.get(dsr.getName()))) ){
+					if (field.getType().equals(FieldType.reference)) {
+						//Loop over the possible links
+						for (int j = 0; j < field.getReferenceTo().length; j++){
+							if (field.getReferenceTo()[j].matches(".*__c|Account|Case|Contact|Task")) {
+								if (!objectsByName.containsKey(field.getReferenceTo()[j])) {
+									objectsByName.put(field.getReferenceTo()[j], new SalesforceObjectType(connection, field.getReferenceTo()[j]));
+								}	
+								if (!isDuplicateField(field.getName())){
+									this.fields.add(new SalesforceFieldType(field.getName(), field.getType().toString(), objectsByName.get(field.getReferenceTo()[j])));
+									this.isRoot = false;
+								}
+							}
+						}
+					} else {					
+						this.fields.add(new SalesforceFieldType(field.getName(), field.getType().toString()));
 					}
-				} else {
-					if (!field.getName().matches(SYSTEM_FIELDS))
-						this.fields.add(new SalesforceFieldType(field.getName()));
 				}
 
 			}
@@ -75,7 +87,7 @@ public class SalesforceObjectType {
 				boolean isChildReferenceData = child.getChildSObject().matches(REFERENCE_DATA);
 				boolean isParentReferenceData = this.name.matches(REFERENCE_DATA);
 				
-				if (!(isParentReferenceData && !isChildReferenceData) && child.getChildSObject().matches(".*__c|Account|Case|Contact")) {
+				if (!(isParentReferenceData && !isChildReferenceData) && child.getChildSObject().matches(".*__c|Account|Case|Contact|Task")) {
 					if (!objectsByName.containsKey(child.getChildSObject())) {
 						objectsByName.put(child.getChildSObject(), new SalesforceObjectType(connection, child.getChildSObject()));
 					}
@@ -87,6 +99,19 @@ public class SalesforceObjectType {
 			ce.printStackTrace();
 		}
 
+	}
+	
+	private boolean isDuplicateField(String name){
+		boolean result = false;
+		
+		for (SalesforceFieldType field : this.fields){
+			if (field.getName().equals(name)){
+				result = true;
+				break;
+			}					
+		}
+		
+		return result;
 	}
 	
 	public boolean canProcess(){

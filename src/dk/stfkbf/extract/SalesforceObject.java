@@ -1,7 +1,12 @@
 package dk.stfkbf.extract;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import com.sforce.soap.partner.PartnerConnection;
 import com.sforce.soap.partner.QueryResult;
@@ -95,19 +100,34 @@ public class SalesforceObject {
 		}		
 	}
 
-	public SObject getSObject(){
+	public SObject getSObject() throws Exception{
 		SObject result = new SObject();
 		
-		result.setType(this.object.getType());
-		
+		result.setType(this.object.getType());		
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		SimpleDateFormat dateTimeFormat = new SimpleDateFormat ("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+		dateTimeFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+		Date dateValue;
 		for (SalesforceFieldType field : this.objectType.getFields()){
 			if (field.isReference() && this.object.getField(field.getName()) != null){
 				System.out.println();
 				String id = this.object.getField(field.getName()).toString();
 				result.setField(field.getName(), SalesforceObject.objectsById.get(id).getTargetId());
 			} else {
-				if (!field.getName().equals("Id"))
-					result.setField(field.getName(), this.object.getField(field.getName()));
+				if (!field.getName().equals("Id")) {
+					Object value = this.object.getField(field.getName());
+					if (value != null && field.getFieldType() == "date"){
+						dateValue = dateFormat.parse(value.toString());
+						result.setField(field.getName(), dateValue);
+					} else if (value != null && field.getFieldType() == "datetime") {
+						dateValue = dateTimeFormat.parse(value.toString().replaceAll("Z$", "+0000"));
+						result.setField(field.getName(), dateValue);
+					} else if (value != null && field.getFieldType() == "_boolean"){							
+						result.setField(field.getName(), Boolean.parseBoolean(value.toString()));
+					} else {
+						result.setField(field.getName(), value);
+					}
+				}
 			}
 		}
 		

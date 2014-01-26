@@ -20,7 +20,7 @@ public class DataExtractor {
 	private String targetPassword;
 	private String endpoint;
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 		DataExtractor extractor;
 		try {
 			extractor = new DataExtractor();
@@ -47,16 +47,18 @@ public class DataExtractor {
 		this.endpoint = this.properties.getProperty("endpoint");
 	}	
 	
-	public void runExtract() throws ConnectionException {
+	public void runExtract() throws Exception {
 		PartnerConnection sourceConnection;
 		PartnerConnection targetConnection;
 
 		sourceConnection = login(this.sourceUsername, this.sourcePassword);
 		targetConnection = login(this.targetUsername, this.targetPassword);
 
-		String objectName = "TestAccount__c";
-		String objectId = "a0IE000000D8ZQ1MAN";
-
+		//String objectName = "TestAccount__c";
+		//String objectId = "a0IE000000D8ZQ1MAN";
+		String objectName = "Account";
+		String objectId = "001b000000McHqmAAF";
+		
 		SalesforceObjectType objectType = new SalesforceObjectType(sourceConnection, objectName);
 
 		SalesforceObject object = new SalesforceObject(sourceConnection, objectId, objectType);
@@ -74,6 +76,7 @@ public class DataExtractor {
 							objects[j].setTargetId(result[0].getId());
 							objects[j].setProcessed(true);
 						} else {
+							System.out.println(objects[j].getSObject().toString());
 							System.out.println("ERROR: Failed to write " + objects[j].getObjectType().getName() + " with Id: " + objects[j].getId());
 							System.out.println(result[0].toString());
 						}
@@ -85,7 +88,7 @@ public class DataExtractor {
 			}
 		}
 		
-		System.out.println("Populated " + objectType.getName() + " - " + object.getId());		System.out.println("Populated " + objectType.getName() + " - " + object.getId());
+		System.out.println("Populated " + objectType.getName() + " - " + object.getId());
 	}
 
 	private PartnerConnection login(String username, String password) throws ConnectionException {

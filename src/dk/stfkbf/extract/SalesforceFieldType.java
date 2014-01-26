@@ -2,15 +2,18 @@ package dk.stfkbf.extract;
 
 public class SalesforceFieldType {
 	private String name;
+	private String fieldType;
 	private boolean reference = false;
 	private SalesforceObjectType referenceObject;
 
-	public SalesforceFieldType(String name) {	
+	public SalesforceFieldType(String name, String fieldType) {	
 		this.name = name;
+		this.fieldType = fieldType;
 	}
 	
-	public SalesforceFieldType(String name, SalesforceObjectType referenceObject) {
+	public SalesforceFieldType(String name, String fieldType, SalesforceObjectType referenceObject) {
 		this.name = name;
+		this.fieldType = fieldType;
 		this.referenceObject = referenceObject;
 		this.reference = true;
 	}
@@ -38,5 +41,15 @@ public class SalesforceFieldType {
 	public void setReferenceObject(SalesforceObjectType referenceObject) {
 		this.referenceObject = referenceObject;
 	}
+
+	public String getFieldType() {
+		return fieldType;
+	}
+
+	public void setFieldType(String fieldType) {
+		this.fieldType = fieldType;
+	}
+	
+	
 
 }
